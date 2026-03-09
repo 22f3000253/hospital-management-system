@@ -1,0 +1,653 @@
+openapi: 3.0.3
+
+info:
+  title: Hospital Management System API
+  version: 1.0.0
+  description: REST API for a role-based hospital management application with Admin, Doctor, and Patient roles.
+
+servers:
+  - url: http://localhost:5000
+    description: Local development server
+
+tags:
+  - name: Auth
+  - name: Admin
+  - name: Doctor
+  - name: Patient
+
+paths:
+
+  /api/auth/register:
+    post:
+      tags: [Auth]
+      summary: Register a new patient account
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [username, email, password, name]
+              properties:
+                username:
+                  type: string
+                email:
+                  type: string
+                password:
+                  type: string
+                name:
+                  type: string
+                age:
+                  type: integer
+                gender:
+                  type: string
+                phone:
+                  type: string
+                blood_group:
+                  type: string
+                address:
+                  type: string
+                emergency_contact:
+                  type: string
+      responses:
+        '201':
+          description: Registration successful
+        '400':
+          description: Missing fields or username/email already exists
+
+  /api/auth/login:
+    post:
+      tags: [Auth]
+      summary: Authenticate user and create session
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [username, password]
+              properties:
+                username:
+                  type: string
+                password:
+                  type: string
+      responses:
+        '200':
+          description: Login successful
+        '401':
+          description: Invalid credentials
+
+  /api/auth/logout:
+    post:
+      tags: [Auth]
+      summary: Clear user session
+      responses:
+        '200':
+          description: Logged out successfully
+
+  /api/auth/me:
+    get:
+      tags: [Auth]
+      summary: Return current logged-in user and profile
+      responses:
+        '200':
+          description: User details returned
+        '401':
+          description: Not authenticated
+
+  /api/admin/dashboard:
+    get:
+      tags: [Admin]
+      summary: Admin stats overview
+      responses:
+        '200':
+          description: Returns total doctors, patients, appointments, departments, and recent activity
+
+  /api/admin/doctors:
+    get:
+      tags: [Admin]
+      summary: List all active doctors
+      parameters:
+        - in: query
+          name: department_id
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: List of doctors
+    post:
+      tags: [Admin]
+      summary: Add a new doctor
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [username, email, password, name, department_id, specialization]
+              properties:
+                username:
+                  type: string
+                email:
+                  type: string
+                password:
+                  type: string
+                name:
+                  type: string
+                department_id:
+                  type: integer
+                specialization:
+                  type: string
+                phone:
+                  type: string
+                qualification:
+                  type: string
+                experience_years:
+                  type: integer
+                consultation_fee:
+                  type: number
+      responses:
+        '201':
+          description: Doctor created
+        '400':
+          description: Missing required fields
+
+  /api/admin/doctors/{id}:
+    put:
+      tags: [Admin]
+      summary: Edit doctor details
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                department_id:
+                  type: integer
+                specialization:
+                  type: string
+                phone:
+                  type: string
+                qualification:
+                  type: string
+                experience_years:
+                  type: integer
+                consultation_fee:
+                  type: number
+      responses:
+        '200':
+          description: Doctor updated
+        '404':
+          description: Doctor not found
+    delete:
+      tags: [Admin]
+      summary: Soft-delete a doctor (sets is_active to false)
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Doctor removed
+        '404':
+          description: Doctor not found
+
+  /api/admin/patients:
+    get:
+      tags: [Admin]
+      summary: List all active patients
+      responses:
+        '200':
+          description: List of patients
+
+  /api/admin/patients/{id}:
+    put:
+      tags: [Admin]
+      summary: Edit patient details
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                age:
+                  type: integer
+                gender:
+                  type: string
+                phone:
+                  type: string
+                address:
+                  type: string
+                blood_group:
+                  type: string
+                emergency_contact:
+                  type: string
+      responses:
+        '200':
+          description: Patient updated
+        '404':
+          description: Patient not found
+    delete:
+      tags: [Admin]
+      summary: Soft-delete a patient
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Patient removed
+        '404':
+          description: Patient not found
+
+  /api/admin/departments:
+    get:
+      tags: [Admin]
+      summary: List all departments with live active doctor count
+      responses:
+        '200':
+          description: List of departments
+    post:
+      tags: [Admin]
+      summary: Add a new department
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name]
+              properties:
+                name:
+                  type: string
+                description:
+                  type: string
+      responses:
+        '201':
+          description: Department created
+        '400':
+          description: Department name already exists
+
+  /api/admin/appointments:
+    get:
+      tags: [Admin]
+      summary: View all appointments across the system
+      responses:
+        '200':
+          description: List of all appointments
+
+  /api/admin/search/doctors:
+    get:
+      tags: [Admin]
+      summary: Search doctors by name or specialization
+      parameters:
+        - in: query
+          name: q
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Matching doctors returned
+
+  /api/admin/search/patients:
+    get:
+      tags: [Admin]
+      summary: Search patients by name, ID, phone, or email
+      parameters:
+        - in: query
+          name: q
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Matching patients returned
+
+  /api/doctor/dashboard:
+    get:
+      tags: [Doctor]
+      summary: Doctor dashboard with today's appointments and stats
+      responses:
+        '200':
+          description: Dashboard data returned
+
+  /api/doctor/appointments:
+    get:
+      tags: [Doctor]
+      summary: List doctor's appointments, filterable by status
+      parameters:
+        - in: query
+          name: status
+          schema:
+            type: string
+            enum: [booked, completed, cancelled]
+      responses:
+        '200':
+          description: List of appointments
+
+  /api/doctor/appointments/{id}:
+    put:
+      tags: [Doctor]
+      summary: Update appointment status
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [status]
+              properties:
+                status:
+                  type: string
+                  enum: [completed, cancelled]
+      responses:
+        '200':
+          description: Status updated
+        '404':
+          description: Appointment not found
+
+  /api/doctor/availability:
+    get:
+      tags: [Doctor]
+      summary: View doctor's availability slots
+      responses:
+        '200':
+          description: List of availability slots
+    post:
+      tags: [Doctor]
+      summary: Add a new availability slot
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [date, start_time, end_time]
+              properties:
+                date:
+                  type: string
+                  format: date
+                start_time:
+                  type: string
+                end_time:
+                  type: string
+      responses:
+        '201':
+          description: Slot added
+        '400':
+          description: Invalid data
+
+  /api/doctor/availability/{id}:
+    delete:
+      tags: [Doctor]
+      summary: Remove an availability slot
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Slot deleted
+        '404':
+          description: Slot not found
+
+  /api/doctor/treatment/{appointment_id}:
+    post:
+      tags: [Doctor]
+      summary: Add treatment record for a completed appointment
+      parameters:
+        - in: path
+          name: appointment_id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                diagnosis:
+                  type: string
+                prescription:
+                  type: string
+                notes:
+                  type: string
+                next_visit_date:
+                  type: string
+                  format: date
+      responses:
+        '201':
+          description: Treatment record created
+    put:
+      tags: [Doctor]
+      summary: Edit an existing treatment record
+      parameters:
+        - in: path
+          name: appointment_id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                diagnosis:
+                  type: string
+                prescription:
+                  type: string
+                notes:
+                  type: string
+                next_visit_date:
+                  type: string
+                  format: date
+      responses:
+        '200':
+          description: Treatment record updated
+
+  /api/patient/dashboard:
+    get:
+      tags: [Patient]
+      summary: Patient dashboard with stats, departments, and upcoming appointments
+      responses:
+        '200':
+          description: Dashboard data returned
+
+  /api/patient/departments:
+    get:
+      tags: [Patient]
+      summary: Browse all departments with active doctor count
+      responses:
+        '200':
+          description: List of departments
+
+  /api/patient/doctors:
+    get:
+      tags: [Patient]
+      summary: List active doctors, filterable by department
+      parameters:
+        - in: query
+          name: department_id
+          schema:
+            type: integer
+        - in: query
+          name: q
+          schema:
+            type: string
+      responses:
+        '200':
+          description: List of doctors
+
+  /api/patient/doctors/{id}:
+    get:
+      tags: [Patient]
+      summary: Get doctor profile and 7-day availability
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Doctor details and availability returned
+        '404':
+          description: Doctor not found
+
+  /api/patient/appointments:
+    get:
+      tags: [Patient]
+      summary: List patient's own appointments
+      responses:
+        '200':
+          description: List of appointments
+    post:
+      tags: [Patient]
+      summary: Book a new appointment
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [doctor_id, appointment_date, appointment_time]
+              properties:
+                doctor_id:
+                  type: integer
+                appointment_date:
+                  type: string
+                  format: date
+                appointment_time:
+                  type: string
+                reason:
+                  type: string
+      responses:
+        '201':
+          description: Appointment booked
+        '400':
+          description: Past date/time or slot unavailable
+
+  /api/patient/appointments/{id}/reschedule:
+    put:
+      tags: [Patient]
+      summary: Reschedule a booked appointment
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [appointment_date, appointment_time]
+              properties:
+                appointment_date:
+                  type: string
+                  format: date
+                appointment_time:
+                  type: string
+      responses:
+        '200':
+          description: Appointment rescheduled
+        '400':
+          description: Invalid date/time or slot not available
+
+  /api/patient/appointments/{id}/cancel:
+    put:
+      tags: [Patient]
+      summary: Cancel a booked appointment
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Appointment cancelled
+        '404':
+          description: Appointment not found
+
+  /api/patient/treatment-history:
+    get:
+      tags: [Patient]
+      summary: View all past treatment records
+      responses:
+        '200':
+          description: List of treatment records
+
+  /api/patient/profile:
+    put:
+      tags: [Patient]
+      summary: Update patient profile details
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                age:
+                  type: integer
+                gender:
+                  type: string
+                phone:
+                  type: string
+                address:
+                  type: string
+                blood_group:
+                  type: string
+                emergency_contact:
+                  type: string
+      responses:
+        '200':
+          description: Profile updated
+
+  /api/patient/export-csv:
+    post:
+      tags: [Patient]
+      summary: Trigger async CSV export of appointment history via email
+      responses:
+        '200':
+          description: Export job queued, CSV will be emailed to registered address
